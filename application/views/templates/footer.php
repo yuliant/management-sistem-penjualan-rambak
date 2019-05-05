@@ -48,6 +48,27 @@
 <!-- Custom scripts for all pages-->
 <script src="<?php echo base_url('assets/'); ?>js/sb-admin-2.min.js"></script>
 
+<!-- jquery dengan ajax -->
+<script>
+  $('.form-check-input').on('click', function(){
+    const menuId = $(this).data('menu');
+    const roleId = $(this).data('role');
+
+    $.ajax({
+      url: "<?php echo base_url('admin/changeAccess'); ?>",
+      type: 'post',
+      data: {
+        menuId: menuId,
+        roleId: roleId
+      },
+      success: function(){
+        document.location.href = "<?php echo base_url('admin/roleAccess/'); ?>" + roleId;
+      }
+    });
+
+  });
+</script>
+
 </body>
 
 </html>
