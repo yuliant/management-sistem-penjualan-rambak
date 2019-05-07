@@ -131,6 +131,9 @@ class Auth extends CI_Controller {
 		if ($type == 'verify') {
 			$this->email->subject('Account Verification');
 			$this->email->message('Click this link to verify your account : <a href="'. base_url() . 'auth/verify?email=' . $this->input->post('email') . '&token=' . urlencode($token) . '">Activite</a>');
+		}elseif ($type == 'forgot') {
+			$this->email->subject('Reset Password');
+			$this->email->message('Click this link to reset your password : <a href="'. base_url() . 'auth/resetpassword?email=' . $this->input->post('email') . '&token=' . urlencode($token) . '">Reset password</a>');
 		}
 
 		if ($this->email->send()) {
@@ -187,4 +190,86 @@ class Auth extends CI_Controller {
 	public function blocked(){
 		$this->load->view('auth/blocked');
 	}
+
+	public function forgotPassword(){
+		$data['title']='Forgot Password';
+
+		$this->form_validation->set_rules("email","Email","required|valid_email|trim");
+		if ($this->form_validation->run() == false) {
+			$this->load->view('templates/auth_header', $data);
+			$this->load->view('auth/forgot-password');
+			$this->load->view('templates/auth_footer');
+		}else {
+			$email = $this->input->post('email');
+			$user = $this->db->get_where('user', ['email' => $email, 'is_active' => 1])->row_array(); //untuk mengecek apakah email yang dipost ada dan sudah diaktivasi di table user
+			if ($user) {
+				$token = base64_encode(random_bytes(32));
+				$user_token = [
+					'email' => $email,
+					'token' => $token,
+					'date_created' => time()
+				];
+
+				$this->db->insert('user_token', $user_token);
+				$this->_sendEmail($token, 'forgot'); //mengirim email untuk forgot password
+
+				$this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Please check your email to reset your password</div>');
+				redirect('auth/forgotPassword');
+			}else {
+				$this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Email is not registered or activated</div>');
+				redirect('auth/forgotPassword');
+			}
+		}
+	}
+
+	public function resetpassword(){
+		$email = $this->input->get('email');
+		$token = $this->input->get('token');
+
+		$user = $this->db->get_where('user', ['email' => $email])->row_array();// mengecek email dengan email yang diget 1 baris
+		if ($user) { //emailnya ada
+			$user_token = $this->db->get_where('user_token', ['token' => $token])->row_array(); // mengecek token dengan token yang diget 1 baris
+			if ($user_token) { //tokennya ada
+				$this->session->set_userdata('reset_email', $email);
+				$this->changePassword();
+
+			}else {
+				$this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Reset password failed! wrong token</div>');
+				redirect('auth');
+			}
+		}else {
+			$this->session->set_flashdata('message', '<div class="alert alert-danger" role="alert">Reset password failed! wrong email</div>');
+			redirect('auth');
+		}
+	}
+
+	public function changePassword(){
+		$data['title']='Change Password';
+
+		if ( !$this->session->userdata('reset_email')) {
+			redirect('auth');
+		}
+
+		$this->form_validation->set_rules("password1","Password","required|trim|min_length[3]|matches[password2]");
+		$this->form_validation->set_rules("password2","Repeat Password","required|trim|min_length[3]|matches[password1]");
+		if ($this->form_validation->run() == false) {
+			$this->load->view('templates/auth_header', $data);
+			$this->load->view('auth/change-password');
+			$this->load->view('templates/auth_footer');
+		}else {
+			$password = password_hash($this->input->post('password1'),PASSWORD_DEFAULT);
+			$email = $this->session->userdata('reset_email');
+
+			$this->db->set('password', $password);
+			$this->db->where('email', $email);
+			$this->db->update('user');
+
+			$this->session->unset_userdata('reset_email');
+			$this->db->delete('user_token', ['email' => $email]); // menghapus token bila sdh mereset password
+
+			$this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Password has been change! please login</div>');
+			redirect('auth');
+		}
+	}
+
 }
