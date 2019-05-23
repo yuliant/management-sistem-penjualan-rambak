@@ -29,7 +29,6 @@ class Menu extends CI_Controller {
 			$this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New menu added</div>');
 			redirect('menu');
     }
-
   }
 
   public function submenu(){
@@ -67,7 +66,20 @@ class Menu extends CI_Controller {
 			$this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New submenu added</div>');
 			redirect('menu/submenu');
     }
-
   }
+
+  public function deleteSubmenu($id){
+    $data['user'] = $this->db->get_where('user', ['email'=> $this->session->userdata('email')])->row_array();
+
+    $this->load->model('Menu_model', 'menu');
+    $this->menu->deleteSubmenu($id);
+
+    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Submenu has been delete</div>');
+    redirect('menu/submenu');
+  }
+
+  // public function editSubmenu($id){
+  //
+  // }
 
 }

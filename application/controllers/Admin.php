@@ -27,11 +27,21 @@ class Admin extends CI_Controller {
     //query get table user_role = mengambil semua data dari user_role dan mengirimkannya ke variable role
     $data['role'] = $this->db->get('user_role')->result_array();
 
-    $this->load->view('templates/header', $data);
-    $this->load->view('templates/sidebar', $data);
-    $this->load->view('templates/topbar', $data);
-    $this->load->view('admin/role',$data);
-    $this->load->view('templates/footer');
+    $this->form_validation->set_rules('role', 'Role', 'required|trim');
+    if ($this->form_validation->run() == false) {
+      $this->load->view('templates/header', $data);
+      $this->load->view('templates/sidebar', $data);
+      $this->load->view('templates/topbar', $data);
+      $this->load->view('admin/role',$data);
+      $this->load->view('templates/footer');
+    }else {
+      $data = [
+        'role' => $this->input->post('role')
+      ];
+      $this->db->insert('user_role', $data);
+			$this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">New role added</div>');
+			redirect('admin/role');
+    }
   }
 
   public function roleAccess($role_id){
@@ -71,4 +81,17 @@ class Admin extends CI_Controller {
     $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Access changed</div>');
 
   }
+
+
+
+  public function deleteRole($id){
+    $data['user'] = $this->db->get_where('user', ['email'=> $this->session->userdata('email')])->row_array();
+
+    $this->load->model('Admin_model', 'admin');
+    $this->admin->deleteRole($id);
+
+    $this->session->set_flashdata('message', '<div class="alert alert-success" role="alert">Role has been delete</div>');
+    redirect('admin/role');
+  }
+
 }

@@ -44,10 +44,14 @@
               <td><?php echo $sm['menu']; ?></td>
               <td><?php echo $sm['url']; ?></td>
               <td><?php echo $sm['icon']; ?></td>
-              <td><?php echo $sm['is_active']; ?></td>
+              <td><?php if ($sm['is_active'] == 1) {
+                echo "Active";
+              }else {
+                echo "Non active";
+              }; ?></td>
               <td>
                 <a class="badge badge-success" href="#">edit</a>
-                <a class="badge badge-danger" href="#">delete</a>
+                <a class="badge badge-danger" href="<?php echo base_url('menu/deleteSubmenu/') . $sm['id']; ?>" onclick="return confirm('yakin?');">delete</a>
               </td>
             </tr>
           <?php

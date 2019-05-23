@@ -10,6 +10,13 @@
         <!-- validation error -->
         <?php echo form_error('menu', '<div class="alert alert-danger" role="alert">', '</div>'); ?>
 
+        <!-- validation error -->
+        <?php if (validation_errors()): ?>
+          <div class="alert alert-danger" role="alert">
+            <?php echo validation_errors(); ?>
+          </div>
+        <?php endif; ?>
+
         <!-- flashdata message -->
         <?php echo $this->session->flashdata('message'); ?>
 
@@ -34,8 +41,8 @@
               <td><?php echo $r['role']; ?></td>
               <td>
                 <a class="badge badge-warning" href="<?php echo base_url('admin/roleAccess/') . $r['id']; ?>">access</a>
-                <a class="badge badge-success" href="#">edit</a>
-                <a class="badge badge-danger" href="#">delete</a>
+                <a class="badge badge-success" href="<?php echo base_url('admin/editRole/') . $r['id']; ?>">edit</a>
+                <a class="badge badge-danger" href="<?php echo base_url('admin/deleteRole/') . $r['id']; ?>" onclick="return confirm('yakin?');">delete</a>
               </td>
             </tr>
           <?php
